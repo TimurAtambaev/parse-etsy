@@ -151,3 +151,5 @@ cython_debug/
 static/
 media/
 migo/apple-developer-merchantid-domain-association.txt
+.csv
+.log
