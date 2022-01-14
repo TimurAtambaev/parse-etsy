@@ -8,7 +8,7 @@
         <h2>Результаты парсинга</h2>
         <h4>Последние обновления</h4>
         {% for parse in page %}
-        {{ parse.link }}&nbsp{{ parse.parse_date }}&nbsp{{ parse.parse_file }}
+            <a href="/media/{{ parse.parse_name }}.csv">{{ parse.parse_name }}</a><br>
         {% endfor %}
     </div>
     {% if page.has_other_pages %}

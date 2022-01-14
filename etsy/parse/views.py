@@ -1,18 +1,16 @@
-"""Модуль с классами парсинга."""
+"""Модуль с представлениями парсинга."""
 import csv
 import logging
-import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-from io import BytesIO
+from datetime import datetime, timedelta
 
 import requests
 from django.core.paginator import Paginator
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from lxml import html
 
 from .forms import LinkForm
-from .models import Parse
+from .models import Parse, Link
 
 logging.basicConfig(
         level=logging.ERROR,
@@ -23,8 +21,9 @@ logging.basicConfig(
 
 
 def results(request):
+    """Вывод ссылок всех результатов парсинга с пагинацией."""
     results_list = Parse.objects.all()
-    paginator = Paginator(results_list, 40)
+    paginator = Paginator(results_list, 20)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(request, 'results.html', {'page': page,
@@ -32,22 +31,25 @@ def results(request):
 
 
 def add_link(request):
-    links = LinkForm(request.POST or None)
+    """Ввод пользователем ссылки для парсинга."""
+    link = LinkForm(request.POST or None)
     link_to_parse = request.POST.get('link', None)
-    if link_to_parse:
+    if link.is_valid and link_to_parse:
         parse_link(link_to_parse)
-    return render(request, 'enter_link_form.html', {'form': links})
+    return render(request, 'enter_link_form.html', {'form': link})
 
 
 def parse_link(link):
+    """Парсинг ссылки, запись результатов в файл csv,
+    внесение наименования файла в базу данных."""
     count = 0
-    start = time.time()
     shops = set()
-    link_page = (str(link) + '&ref=pagination&page=') if '?' in str(link) else (str(link) + '?ref=pagination&page=')
+    link_page = ((link + '&ref=pagination&page=') if '?' in link else
+                 (link + '?ref=pagination&page='))
     try:
         while count <= 5:
             count += 1
-            resp = requests.get(f'{link_page}{count}', timeout=3)
+            resp = requests.get(f'{link_page}{count}', timeout=10)
             tree = html.fromstring(resp.text)
             res = tree.xpath(
                 '//*[@id="content"]/div/div[1]/div/div[3]/div[2]/div[2]/div[5]'
@@ -58,10 +60,8 @@ def parse_link(link):
 
     except Exception as err:
         logging.error(f'{err}', exc_info=True)
-        end = time.time()
         raise err
 
-    start = time.time()
     with ThreadPoolExecutor(max_workers=20) as pool:
         response_list = list(pool.map(get_shop_info, shops))
 
@@ -72,16 +72,14 @@ def parse_link(link):
                 continue
             tree = html.fromstring(item.text)
             try:
-                since = \
-                tree.xpath('//*[@id="about"]/div/div/div[1]/div/div/div[2]'
-                           '/span')[0].text
+                since = tree.xpath('//*[@id="about"]/div/div/div[1]/div/div/'
+                                   'div[2]/span')[0].text
             except Exception as err:
                 logging.error(f'{err}', exc_info=True)
                 since = None
             try:
-                sales = \
-                tree.xpath('//*[@id="about"]/div/div/div[1]/div/div/div[1]'
-                           '/span')[0].text
+                sales = tree.xpath('//*[@id="about"]/div/div/div[1]/div/div/'
+                                   'div[1]/span')[0].text
             except Exception as err:
                 logging.error(f'{err}', exc_info=True)
                 sales = 0
@@ -90,14 +88,16 @@ def parse_link(link):
                     '//*[@id="content"]/div[1]/div[1]/div[2]/div/div/div/'
                     'div[1]/div[1]/div[2]/div[1]/h1')[
                     0].text
-            except Exception:
+            except Exception as err:
+                logging.error(f'{err}', exc_info=True)
                 continue
             shop_link = f'https://www.etsy.com/shop/{shop}'
             shops_info.append((shop, shop_link, since, sales))
     except Exception:
         ...
 
-    filename = f'parse_etsy_{str(datetime.now())}.csv'
+    parse_time = str(datetime.now()+timedelta(hours=3))
+    filename = f'media/{parse_time}.csv'
     file = open(filename, 'w', newline='')
     writer = csv.writer(file)
     writer.writerow(
@@ -105,10 +105,13 @@ def parse_link(link):
     for shop in shops_info:
         writer.writerow(shop)
     file.close()
-    parse = Parse.objects.create(parse_link=link, parse_file=file)
+    parse = Parse.objects.create(parse_name=parse_time)
     parse.save()
 
 
 def get_shop_info(shop):
-    return requests.get(f'https://www.etsy.com/shop/{shop}', timeout=3)
+    """Получение страницы магазина."""
+    return requests.get(f'https://www.etsy.com/shop/{shop}', timeout=10)
+
+
 
