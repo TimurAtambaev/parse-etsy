@@ -1,11 +1,18 @@
-{% extends 'admin/base.html' %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
     <div>
-        <form action=".." method="POST" enctype="multipart/form-data">
+        <h3>Введите ссылку на сайт etsy.com с заданными параметрами парсинга. </h3> <br>
+        <h4>Пример ссылки: "https://www.etsy.com/c/bags-and-purses/handbags/clutches-and-evening-bags?locationQuery=472757"</h4>
+        <form action="{% url 'parse:add_link' %}" method="POST" enctype="multipart/form-data">
             {{ form.as_p }}
             {% csrf_token %}
-            <button type="submit">Start parse</button>
-        </form>
+            <button type="submit">Начать парсинг</button>
+        </form><br>
+        <h4>Парсинг займет некоторое время, от нескольких минут до часа и более при большом объеме данных. Результаты парсинга будут доступны по адресу /results. </h4>
     </div>
-{% endblock %}
+</body>
+</html>

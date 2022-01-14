@@ -4,5 +4,6 @@ from . import views
 app_name = "parse"
 
 urlpatterns = [
-    path('', views.ParseLink.as_view(), name="parse"),
+    path('', views.add_link, name='add_link', ),
+    path('results/', views.results, name='results'),
 ]

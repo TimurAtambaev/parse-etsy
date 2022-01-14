@@ -4,16 +4,15 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from io import BytesIO
 
 import requests
-from django.contrib.auth.admin import UserAdmin
 from django.core.paginator import Paginator
-from django.forms import forms, widgets
-from django.shortcuts import render
-from django.urls import path
+from django.shortcuts import render, redirect
 from lxml import html
 
-from etsy.parse.models import Parse
+from .forms import LinkForm
+from .models import Parse
 
 logging.basicConfig(
         level=logging.ERROR,
@@ -25,27 +24,34 @@ logging.basicConfig(
 
 def results(request):
     results_list = Parse.objects.all()
-    paginator = Paginator(results_list, 10)
+    paginator = Paginator(results_list, 40)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(request, 'results.html', {'page': page,
                                             'paginator': paginator})
 
 
-def parse_link():
+def add_link(request):
+    links = LinkForm(request.POST or None)
+    link_to_parse = request.POST.get('link', None)
+    if link_to_parse:
+        parse_link(link_to_parse)
+    return render(request, 'enter_link_form.html', {'form': links})
+
+
+def parse_link(link):
     count = 0
     start = time.time()
     shops = set()
+    link_page = (str(link) + '&ref=pagination&page=') if '?' in str(link) else (str(link) + '?ref=pagination&page=')
     try:
-        while count <= 10000:
+        while count <= 5:
             count += 1
-            resp = requests.get(
-                f'https://www.etsy.com/c?locationQuery=473247&explicit=1&item_type='
-                f'handmade&ref=pagination&page={count}', timeout=3)
+            resp = requests.get(f'{link_page}{count}', timeout=3)
             tree = html.fromstring(resp.text)
             res = tree.xpath(
-                '//*[@id="content"]/div/div[1]/div/div[3]/div[2]/div[2]/div[5]/div/'
-                'div/div/ul/li[*]/div/div/a/div[2]/div/div[1]/p')
+                '//*[@id="content"]/div/div[1]/div/div[3]/div[2]/div[2]/div[5]'
+                '/div/div/div/ul/li[*]/div/div/a/div[2]/div/div[1]/p')
             if not res:
                 break
             shops.update(item.text.strip('\n   ') for item in res)
@@ -54,9 +60,6 @@ def parse_link():
         logging.error(f'{err}', exc_info=True)
         end = time.time()
         raise err
-
-    def get_shop_info(shop):
-        return requests.get(f'https://www.etsy.com/shop/{shop}', timeout=3)
 
     start = time.time()
     with ThreadPoolExecutor(max_workers=20) as pool:
@@ -84,8 +87,8 @@ def parse_link():
                 sales = 0
             try:
                 shop = tree.xpath(
-                    '//*[@id="content"]/div[1]/div[1]/div[2]/div/div/div/div[1]/'
-                    'div[1]/div[2]/div[1]/h1')[
+                    '//*[@id="content"]/div[1]/div[1]/div[2]/div/div/div/'
+                    'div[1]/div[1]/div[2]/div[1]/h1')[
                     0].text
             except Exception:
                 continue
@@ -102,3 +105,10 @@ def parse_link():
     for shop in shops_info:
         writer.writerow(shop)
     file.close()
+    parse = Parse.objects.create(parse_link=link, parse_file=file)
+    parse.save()
+
+
+def get_shop_info(shop):
+    return requests.get(f'https://www.etsy.com/shop/{shop}', timeout=3)
+
