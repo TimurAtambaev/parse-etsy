@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 import requests
 from django.core.paginator import Paginator
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from lxml import html
 
 from .forms import LinkTokenForm
@@ -43,7 +44,13 @@ def add_link(request):
                             'чтобы начать парсинг.')
     if link.is_valid and link_to_parse:
         parse_link(link_to_parse)
+        return redirect(reverse('parse:success'))
     return render(request, 'enter_link_form.html', {'form': link})
+
+
+def success(request):
+    """Редирект после ввода ссылки и пароля и начала парсинга."""
+    return render(request, 'redirect_page.html')
 
 
 def parse_link(link):
