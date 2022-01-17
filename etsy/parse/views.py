@@ -54,7 +54,7 @@ def parse_link(link):
     link_page = ((link + '&ref=pagination&page=') if '?' in link else
                  (link + '?ref=pagination&page='))
     try:
-        while count <= 10000:
+        while count <= 5:
             count += 1
             resp = requests.get(f'{link_page}{count}', timeout=10)
             tree = html.fromstring(resp.text)
@@ -85,11 +85,27 @@ def parse_link(link):
                 logging.error(f'{err}', exc_info=True)
                 since = None
             try:
-                sales = tree.xpath('//*[@id="about"]/div/div/div[1]/div/div/'
-                                   'div[1]/span')[0].text
+                sales = tree.xpath(
+                    '//*[@id="content"]/div[1]/div[1]/div[2]/div/div/div/div'
+                    '[1]/div/div[2]/div[2]/div[2]/span[1]/a')[0].text
             except Exception as err:
                 logging.error(f'{err}', exc_info=True)
-                sales = 0
+                sales = '0'
+            try:
+                sales = sales or tree.xpath(
+                    '//*[@id="content"]/div[1]/div[2]/div[2]/span/div[2]/div'
+                    '[1]/div[5]/div[1]')[0].text
+            except Exception as err:
+                logging.error(f'{err}', exc_info=True)
+                sales = '0'
+            try:
+                sales = sales or tree.xpath(
+                    '//*[@id="about"]/div/div/div[1]/div/div/div'
+                    '[1]/span')[0].text
+            except Exception as err:
+                logging.error(f'{err}', exc_info=True)
+                sales = '0'
+            sales = sales.strip('Sales')
             try:
                 shop = tree.xpath(
                     '//*[@id="content"]/div[1]/div[1]/div[2]/div/div/div/'
