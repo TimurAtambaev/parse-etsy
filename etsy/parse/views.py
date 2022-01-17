@@ -1,14 +1,15 @@
 """Модуль с представлениями парсинга."""
 import csv
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import requests
 from django.core.paginator import Paginator
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.shortcuts import render
 from lxml import html
 
 from .forms import LinkTokenForm
@@ -22,6 +23,8 @@ logging.basicConfig(
     filemode='w',
     format='%(asctime)s, %(levelname)s, %(name)s, %(message)s'
 )
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def results(request):
@@ -54,7 +57,7 @@ def parse_link(link):
     link_page = ((link + '&ref=pagination&page=') if '?' in link else
                  (link + '?ref=pagination&page='))
     try:
-        while count <= 5:
+        while count <= 10000:
             count += 1
             resp = requests.get(f'{link_page}{count}', timeout=10)
             tree = html.fromstring(resp.text)
@@ -120,7 +123,9 @@ def parse_link(link):
         ...
 
     parse_time = str(datetime.now() + timedelta(hours=3))
-    filename = f'media/{parse_time}.csv'
+    if not os.path.isdir('media'):
+        os.mkdir('media')
+    filename = f'{os.path.join(BASE_DIR, "media")}/{parse_time}.csv'
     file = open(filename, 'w', newline='')
     writer = csv.writer(file)
     writer.writerow(
