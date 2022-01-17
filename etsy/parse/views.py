@@ -14,15 +14,14 @@ from lxml import html
 from .forms import LinkTokenForm
 from .models import Parse
 
-
 TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDI0MDE0ND'
 
 logging.basicConfig(
-        level=logging.ERROR,
-        filename='parse_etsy.log',
-        filemode='w',
-        format='%(asctime)s, %(levelname)s, %(name)s, %(message)s'
-    )
+    level=logging.ERROR,
+    filename='parse_etsy.log',
+    filemode='w',
+    format='%(asctime)s, %(levelname)s, %(name)s, %(message)s'
+)
 
 
 def results(request):
@@ -44,13 +43,7 @@ def add_link(request):
                             'чтобы начать парсинг.')
     if link.is_valid and link_to_parse:
         parse_link(link_to_parse)
-        return redirect(reverse('parse:success'))
     return render(request, 'enter_link_form.html', {'form': link})
-
-
-def success(request):
-    """Редирект после ввода ссылки и пароля и начала парсинга."""
-    return render(request, 'redirect_page.html')
 
 
 def parse_link(link):
@@ -61,7 +54,7 @@ def parse_link(link):
     link_page = ((link + '&ref=pagination&page=') if '?' in link else
                  (link + '?ref=pagination&page='))
     try:
-        while count <= 10000:
+        while count <= 5:
             count += 1
             resp = requests.get(f'{link_page}{count}', timeout=10)
             tree = html.fromstring(resp.text)
@@ -126,7 +119,7 @@ def parse_link(link):
     except Exception:
         ...
 
-    parse_time = str(datetime.now()+timedelta(hours=3))
+    parse_time = str(datetime.now() + timedelta(hours=3))
     filename = f'media/{parse_time}.csv'
     file = open(filename, 'w', newline='')
     writer = csv.writer(file)
@@ -142,6 +135,3 @@ def parse_link(link):
 def get_shop_info(shop):
     """Получение страницы магазина."""
     return requests.get(f'https://www.etsy.com/shop/{shop}', timeout=10)
-
-
-

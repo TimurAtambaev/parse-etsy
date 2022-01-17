@@ -9,5 +9,4 @@ app_name = "parse"
 urlpatterns = [
     path('', views.add_link, name='add_link', ),
     path('results/', views.results, name='results'),
-    path('success/', views.success, name='success'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
