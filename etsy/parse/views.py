@@ -36,9 +36,6 @@ def results(request):
 
 def add_link(request):
     """Ввод пользователем ссылки для парсинга."""
-    message = ('Введите на сайте etsy.com нужные вам параметры '
-               '(категория, регион, ...), затем скопируйте ссылку из адресной '
-               'строки браузера и вставьте в поле ниже.')
     link = LinkTokenForm(request.POST or None)
     link_to_parse = request.POST.get('link', None)
     if request.POST.get('token') and request.POST.get('token') != TOKEN:
@@ -46,8 +43,7 @@ def add_link(request):
                             'чтобы начать парсинг.')
     if link.is_valid and link_to_parse:
         parse_link(link_to_parse)
-    return render(request, 'enter_link_form.html', {'form': link, 'message':
-                                                    message})
+    return render(request, 'enter_link_form.html', {'form': link})
 
 
 def parse_link(link):
