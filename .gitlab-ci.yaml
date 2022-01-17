@@ -1,0 +1,31 @@
+stages:
+  - test
+  - build
+  - deploy
+
+include:
+  - project: "tools/ci"
+    ref: main
+    file: ".codestyle-ci.yml"
+
+update image:
+  stage: build
+  image: gcr.io/kaniko-project/executor:debug
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_PIPELINE_ID
+  only:
+    - master
+
+install prod server:
+  stage: deploy
+  image: lwolf/helm-kubectl-docker:v1.19.3-v3.3.4
+  needs:
+    - update image
+  environment:
+    name: production
+    url: https://metrics.wpp.zone
+  script:
+    - helm upgrade --install --namespace $KUBE_NAMESPACE --set image.tag=$CI_PIPELINE_ID --set appVersion=$CI_COMMIT_TAG metrics ./etsy-parser-helm
+  only:
+    - master
