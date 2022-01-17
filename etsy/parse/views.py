@@ -9,7 +9,8 @@ from pathlib import Path
 import requests
 from django.core.paginator import Paginator
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from lxml import html
 
 from .forms import LinkTokenForm
@@ -46,7 +47,13 @@ def add_link(request):
                             'чтобы начать парсинг.')
     if link.is_valid and link_to_parse:
         parse_link(link_to_parse)
+        return redirect(reverse('parse:success'))
     return render(request, 'enter_link_form.html', {'form': link})
+
+
+def success(request):
+    """Редирект после завершения парсинга. ссылки"""
+    return render(request, 'redirect_page.html')
 
 
 def parse_link(link):
@@ -57,7 +64,7 @@ def parse_link(link):
     link_page = ((link + '&ref=pagination&page=') if '?' in link else
                  (link + '?ref=pagination&page='))
     try:
-        while count <= 10000:
+        while count <= 5:
             count += 1
             resp = requests.get(f'{link_page}{count}', timeout=10)
             tree = html.fromstring(resp.text)
