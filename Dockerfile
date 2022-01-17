@@ -8,8 +8,7 @@ RUN poetry install --no-root
 # python будет в /app/.venv/bin/python для IDE
 
 COPY . /app
-
-WORKDIR /app
+RUN mkdir /app/etsy/media
 
 ENTRYPOINT ["poetry", "run"]
 CMD ["poetry", "run", "python", "etsy/manage.py", "runserver", "0:8000"]
