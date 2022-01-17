@@ -54,7 +54,7 @@ def parse_link(link):
     link_page = ((link + '&ref=pagination&page=') if '?' in link else
                  (link + '?ref=pagination&page='))
     try:
-        while count <= 5:
+        while count <= 10000:
             count += 1
             resp = requests.get(f'{link_page}{count}', timeout=10)
             tree = html.fromstring(resp.text)
