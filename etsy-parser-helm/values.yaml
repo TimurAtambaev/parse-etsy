@@ -6,7 +6,8 @@ replicaCount: 1
 
 image:
   repository: git.webpp.ru/tools/etsy-parser/
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -39,14 +40,14 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io: /
     kubernetes.io/ingress.class: "nginx"
-    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
     - host: etsy.weppdev.ru
       paths: "/"
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+  tls:
+    - secretName: etsy-wepp-tls
+      hosts:
+        - etsy.weppdev.ru
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
