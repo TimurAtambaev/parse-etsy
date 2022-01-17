@@ -5,13 +5,14 @@ description = ""
 authors = ["Andrey Shahov <andrey.shahov@webpp.ru>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 Django = "^4.0.1"
 requests = "^2.27.1"
 sqlparse = "^0.4.2"
 urllib3 = "^1.26.8"
 lxml = "^4.7.1"
 psycopg2-binary = "^2.9.3"
+"backports.weakref" = "^1.0.post1"
 
 [tool.poetry.dev-dependencies]
 

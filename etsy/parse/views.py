@@ -6,11 +6,15 @@ from datetime import datetime, timedelta
 
 import requests
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import render
 from lxml import html
 
-from .forms import LinkForm
-from .models import Parse, Link
+from .forms import LinkTokenForm
+from .models import Parse
+
+
+TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDI0MDE0ND'
 
 logging.basicConfig(
         level=logging.ERROR,
@@ -32,11 +36,18 @@ def results(request):
 
 def add_link(request):
     """Ввод пользователем ссылки для парсинга."""
-    link = LinkForm(request.POST or None)
+    message = ('Введите на сайте etsy.com нужные вам параметры '
+               '(категория, регион, ...), затем скопируйте ссылку из адресной '
+               'строки браузера и вставьте в поле ниже.')
+    link = LinkTokenForm(request.POST or None)
     link_to_parse = request.POST.get('link', None)
+    if request.POST.get('token') and request.POST.get('token') != TOKEN:
+        return HttpResponse('Пожалуйста, введите корректный токен доступа '
+                            'чтобы начать парсинг.')
     if link.is_valid and link_to_parse:
         parse_link(link_to_parse)
-    return render(request, 'enter_link_form.html', {'form': link})
+    return render(request, 'enter_link_form.html', {'form': link, 'message':
+                                                    message})
 
 
 def parse_link(link):
@@ -105,7 +116,7 @@ def parse_link(link):
     for shop in shops_info:
         writer.writerow(shop)
     file.close()
-    parse = Parse.objects.create(parse_name=parse_time)
+    parse = Parse.objects.create(parse_name=parse_time, link=link)
     parse.save()
 
 

@@ -5,14 +5,15 @@
 </head>
 <body>
     <div>
-        <h3>Введите ссылку на сайт etsy.com с заданными параметрами парсинга. </h3> <br>
+        <h2>Парсинг сайта etsy.com с заданными параметрами.</h2>
+        <h3>{{ message }}</h3> <br>
         <h4>Пример ссылки: "https://www.etsy.com/c/bags-and-purses/handbags/clutches-and-evening-bags?locationQuery=472757"</h4>
         <form action="{% url 'parse:add_link' %}" method="POST" enctype="multipart/form-data">
             {{ form.as_p }}
             {% csrf_token %}
             <button type="submit">Начать парсинг</button>
         </form><br>
-        <h4>Парсинг займет некоторое время, от нескольких минут до часа и более при большом объеме данных. Результаты будут доступны по адресу /results. </h4>
+        <h4>Парсинг займет некоторое время, от нескольких минут до часа и более при большом объеме данных. Результаты будут доступны <a href="{% url 'parse:results' %}">на этой странице</a><br></h4>
     </div>
 </body>
 </html>

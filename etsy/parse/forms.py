@@ -1,9 +1,9 @@
 from django import forms
 
-from .models import Link
+from .models import Parse
 
 
-class LinkForm(forms.ModelForm):
+class LinkTokenForm(forms.ModelForm):
     class Meta:
-        model = Link
-        fields = ['link']
+        model = Parse
+        fields = ['link', 'token']
