@@ -5,10 +5,10 @@
 </head>
 <body>
     <div class="container">
-        <h2>Результаты парсинга</h2>
-        <h4>Последние обновления</h4>
+        <h1>Результаты парсинга</h1>
+        <h3>Последние обновления</h3>
         {% for parse in page %}
-            <a href="/media/{{ parse.parse_name }}.csv">{{ parse.parse_name }} (результат парсинга ссылки {{ parse.link }})</a><br>
+            <p><a href="/media/{{ parse.parse_name }}.csv">{{ parse.parse_name }} (ссылка {{ parse.link }})</a><p>
         {% endfor %}
     </div>
     {% if page.has_other_pages %}
