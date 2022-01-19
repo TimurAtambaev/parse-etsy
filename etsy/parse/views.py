@@ -191,9 +191,9 @@ def parse_link(link):
         logging.error(f'{err}', exc_info=True)
         ...
 
-    if not os.path.isdir('media'):
-        os.mkdir('media')
-    filename = f'{os.path.join(BASE_DIR, "media")}/{parse_time}.csv'
+    if not os.path.isdir('etsy/media'):
+        os.mkdir('etsy/media')
+    filename = f'etsy/media/{parse_time}.csv'
     file = open(filename, 'w', newline='')
     writer = csv.writer(file)
     writer.writerow(
