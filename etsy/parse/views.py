@@ -203,7 +203,7 @@ def parse_link(link):
     file.close()
     parse = Parse.objects.create(parse_name=parse_time, link=link)
     parse.save()
-    media_files = [file.strip('.csv') for file in os.listdir('media')]
+    media_files = [file.strip('.csv') for file in os.listdir('etsy/media')]
     for link in Parse.objects.all():
         if link.parse_name not in media_files:
             link.delete()
