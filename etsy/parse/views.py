@@ -49,6 +49,10 @@ def add_link(request):
     if request.POST.get('token') and request.POST.get('token') != TOKEN:
         return HttpResponse('Пожалуйста, введите корректный токен доступа '
                             'чтобы начать парсинг.')
+    if (link.is_valid and link_to_parse and 'https://www.etsy.com' not in
+            link_to_parse):
+        return HttpResponse('Пожалуйста, введите ссылку на сайт '
+                            'https://www.etsy.com.')
     if link.is_valid and link_to_parse:
         pool = ThreadPoolExecutor(max_workers=1)
         pool.submit(parse_link, link=link_to_parse)
