@@ -6,4 +6,4 @@ from .models import Parse
 class LinkTokenForm(forms.ModelForm):
     class Meta:
         model = Parse
-        fields = ['link', 'token']
+        fields = ['link']

@@ -46,9 +46,6 @@ def add_link(request):
     """Ввод пользователем ссылки для парсинга."""
     link = LinkTokenForm(request.POST or None)
     link_to_parse = request.POST.get('link', None)
-    if request.POST.get('token') and request.POST.get('token') != TOKEN:
-        return HttpResponse('Пожалуйста, введите корректный токен доступа '
-                            'чтобы начать парсинг.')
     if (link.is_valid and link_to_parse and 'https://www.etsy.com' not in
             link_to_parse):
         return HttpResponse('Пожалуйста, введите ссылку на сайт '
