@@ -5,7 +5,6 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import ThreadPoolExecutor as Thread
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import requests
 from django.core.paginator import Paginator
@@ -15,7 +14,7 @@ from django.urls import reverse
 from lxml import html
 from bs4 import BeautifulSoup
 
-from .forms import LinkTokenForm
+from .forms import LinkForm
 from .models import Parse
 
 logging.basicConfig(
@@ -25,8 +24,6 @@ logging.basicConfig(
     format='%(asctime)s, %(levelname)s, %(name)s, %(message)s'
 )
 
-TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDI0MDE0ND'
-BASE_DIR = Path(__file__).resolve().parent.parent
 HEADERS = ({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                           'AppleWebKit/537.36 (KHTML, like Gecko) '
                           'Chrome/90.0.4430.212 Safari/537.36'})
@@ -44,7 +41,7 @@ def results(request):
 
 def add_link(request):
     """Ввод пользователем ссылки для парсинга."""
-    link = LinkTokenForm(request.POST or None)
+    link = LinkForm(request.POST or None)
     link_to_parse = request.POST.get('link', None)
     if (link.is_valid and link_to_parse and 'https://www.etsy.com' not in
             link_to_parse):
@@ -58,7 +55,7 @@ def add_link(request):
 
 
 def success(request):
-    """Редирект после завершения парсинга. ссылки"""
+    """Редирект после начала парсинга ссылки"""
     return render(request, 'redirect_page.html')
 
 
@@ -70,7 +67,6 @@ def parse_link(link):
     shops = set()
     link_page = ((link + '&ref=pagination&page=') if '?' in link else
                  (link + '?ref=pagination&page='))
-    print(link_page)
     try:
         while count <= 10000:
             count += 1
@@ -134,15 +130,15 @@ def parse_link(link):
                                    'div[2]/span')[0].text
             except Exception as err:
                 logging.error(f'{err}', exc_info=True)
-                since = None
-            if since == None:
+                since = 'None'
+            if since == 'None':
                 try:
                     since = soup.select('#about > div > div > div.shop-home-'
                                         'wider-sections.mr-lg-4 > div > div > '
                                         'div:nth-child(2) > span')[0].text
                 except Exception as err:
                     logging.error(f'{err}', exc_info=True)
-            if since == None:
+            if since == 'None':
                 try:
                     since = tree.xpath('//span[@class="b text-title display'
                                        '-block"]')[1].text
@@ -186,25 +182,47 @@ def parse_link(link):
                                         '-wrap')[0].text
                 except Exception as err:
                     logging.error(f'{err}', exc_info=True)
+            try:
+                products = tree.xpath('//span[@class="wt-mr-md-2"]')[0].text
+            except Exception as err:
+                logging.error(f'{err}', exc_info=True)
+                products = 'None'
+            if products == 'None':
+                try:
+                    products = soup.select(
+                       '#content > div.shop-home > div.wt-body'
+                       '-max-width.wt-pr-xs-2.wt-pr-md-4.wt-pl'
+                       '-xs-2.wt-pl-md-4 > div:nth-child(2) > '
+                       'span > div.display-flex-lg > div.hide-'
+                       'xs.hide-sm.hide-md.pl-xs-0.shop-home-'
+                       'wider-sections.mr-lg-4.pr-xs-0 > div.'
+                       'wt-tab-container.wt-mb-xs-6 > ul > '
+                       'button.wt-tab__item.wt-ml-md-0.wt-mr'
+                       '-md-0.vertical-tab.wt-justify-content'
+                       '-space-between.is-selected > span.wt'
+                       '-mr-md-2')[0].text
+                except Exception as err:
+                    logging.error(f'{err}', exc_info=True)
+
             sales = sales.strip('продажи').strip('Sales')
-            shops_info.append((shop, shop_link, since, sales))
+            shops_info.append((shop, shop_link, since, sales, products))
     except Exception as err:
         logging.error(f'{err}', exc_info=True)
         ...
 
-    if not os.path.isdir('etsy/media'):
-        os.mkdir('etsy/media')
-    filename = f'etsy/media/{parse_time}.csv'
+    if not os.path.isdir('media'):
+        os.mkdir('media')
+    filename = f'media/{parse_time}.csv'
     file = open(filename, 'w', newline='')
     writer = csv.writer(file)
-    writer.writerow(
-        ['Магазин', 'Ссылка на магазин', 'Год основания', 'Продажи'])
+    writer.writerow(['Магазин', 'Ссылка на магазин', 'Год основания', 'Продажи',
+                     'Количество товаров'])
     for shop in shops_info:
         writer.writerow(shop)
     file.close()
     parse = Parse.objects.create(parse_name=parse_time, link=link)
     parse.save()
-    media_files = [file.strip('.csv') for file in os.listdir('etsy/media')]
+    media_files = [file.strip('.csv') for file in os.listdir('media')]
     for link in Parse.objects.all():
         if link.parse_name not in media_files:
             link.delete()
