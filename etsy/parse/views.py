@@ -2,6 +2,7 @@
 import csv
 import logging
 import os
+import re
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import ThreadPoolExecutor as Thread
 from datetime import datetime, timedelta
@@ -16,6 +17,7 @@ from bs4 import BeautifulSoup
 
 from .forms import LinkForm
 from .models import Parse
+from django.conf import settings
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -32,7 +34,7 @@ HEADERS = ({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
 def results(request):
     """Вывод ссылок всех результатов парсинга с пагинацией."""
     results_list = Parse.objects.all()
-    paginator = Paginator(results_list, 10)
+    paginator = Paginator(results_list, settings.PAGE_NUMBER)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(request, 'results.html', {'page': page,
@@ -46,7 +48,7 @@ def add_link(request):
     if (link.is_valid and link_to_parse and 'https://www.etsy.com' not in
             link_to_parse):
         return HttpResponse('Пожалуйста, введите ссылку на сайт '
-                            'https://www.etsy.com.')
+                            'https://www.etsy.com')
     if link.is_valid and link_to_parse:
         pool = ThreadPoolExecutor(max_workers=1)
         pool.submit(parse_link, link=link_to_parse)
@@ -67,8 +69,20 @@ def parse_link(link):
     shops = set()
     link_page = ((link + '&ref=pagination&page=') if '?' in link else
                  (link + '?ref=pagination&page='))
+    resp = requests.get(link, headers=HEADERS, timeout=10)
+    tree = html.fromstring(resp.text)
+    res = tree.xpath('//p[@class="wt-text-caption wt-text-truncate '
+                     'wt-text-gray wt-mb-xs-1"]')
+    # soup = BeautifulSoup(resp.text, 'lxml')
+    # try:
+    #     location = (soup(string=re.compile('Товары из'))[0].strip('\n   ')
+    #                 .split()[2].strip(','))
+    # except Exception as err:
+    #     logging.error(f'{err}', exc_info=True)
+    #     location = ''
+    shops.update(item.text.strip('\n   ') for item in res)
     try:
-        while count <= 10000:
+        while count <= 1000:
             count += 1
             resp = requests.get(f'{link_page}{count}', headers=HEADERS,
                                 timeout=10)
@@ -92,6 +106,20 @@ def parse_link(link):
                 continue
             tree = html.fromstring(item.text)
             soup = BeautifulSoup(item.text, 'lxml')
+            # try:
+            #     path = tree.xpath(
+            #         '//span[@class="shop-location wt-text-'
+            #         'caption wt-text-gray wt-line-height-'
+            #         'tight wt-text-truncate"]')
+            #     if not path:
+            #         path = tree.xpath(
+            #             '//*[@id="content"]/div[1]/div[1]/div[2]/div/div/div/'
+            #             'div[1]/div[1]/div[2]/div[2]/div[1]/div[2]/span[2]')
+            #     shop_location = path[0].text
+            #     if location not in shop_location:
+            #         continue
+            # except Exception as err:
+            #     logging.error(f'{err}', exc_info=True)
             try:
                 shop = tree.xpath(
                     '//*[@id="content"]/div[1]/div[1]/div[2]/div/div/div/'
@@ -210,19 +238,19 @@ def parse_link(link):
         logging.error(f'{err}', exc_info=True)
         ...
 
-    if not os.path.isdir('media'):
-        os.mkdir('media')
+    if not os.path.isdir(settings.MEDIA_ROOT):
+        os.mkdir(settings.MEDIA_ROOT)
     filename = f'media/{parse_time}.csv'
-    file = open(filename, 'w', newline='')
-    writer = csv.writer(file)
-    writer.writerow(['Магазин', 'Ссылка на магазин', 'Год основания', 'Продажи',
-                     'Количество товаров'])
-    for shop in shops_info:
-        writer.writerow(shop)
-    file.close()
+    with open(filename, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Магазин', 'Ссылка на магазин', 'Год основания',
+                         'Продажи', 'Количество товаров'])
+        for shop in shops_info:
+            writer.writerow(shop)
     parse = Parse.objects.create(parse_name=parse_time, link=link)
     parse.save()
-    media_files = [file.strip('.csv') for file in os.listdir('media')]
+    media_files = [file_csv.strip('.csv') for file_csv in os.listdir(
+        settings.MEDIA_ROOT)]
     for link in Parse.objects.all():
         if link.parse_name not in media_files:
             link.delete()
