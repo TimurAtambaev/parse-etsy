@@ -69,10 +69,6 @@ def parse_link(link):
     shops = set()
     link_page = ((link + '&ref=pagination&page=') if '?' in link else
                  (link + '?ref=pagination&page='))
-    resp = requests.get(link, headers=HEADERS, timeout=10)
-    tree = html.fromstring(resp.text)
-    res = tree.xpath('//p[@class="wt-text-caption wt-text-truncate '
-                     'wt-text-gray wt-mb-xs-1"]')
     # soup = BeautifulSoup(resp.text, 'lxml')
     # try:
     #     location = (soup(string=re.compile('Товары из'))[0].strip('\n   ')
@@ -80,18 +76,27 @@ def parse_link(link):
     # except Exception as err:
     #     logging.error(f'{err}', exc_info=True)
     #     location = ''
-    shops.update(item.text.strip('\n   ') for item in res)
     try:
         while count <= 1000:
             count += 1
             resp = requests.get(f'{link_page}{count}', headers=HEADERS,
                                 timeout=10)
-            tree = html.fromstring(resp.text)
-            res = tree.xpath('//p[@class="wt-text-caption wt-text-truncate '
-                             'wt-text-gray wt-mb-xs-1"]')
+            soup = BeautifulSoup(resp.text, 'lxml')
+            res = soup(string=re.compile('Из магазина'))
             if not res:
-                break
-            shops.update(item.text.strip('\n   ') for item in res)
+                try:
+                    tree = html.fromstring(resp.text)
+                    res = tree.xpath(
+                        '//p[@class="wt-text-caption wt-text-truncate '
+                        'wt-text-gray wt-mb-xs-1"]')
+                    if not res:
+                        break
+                    shops.update(item.text.strip('\n   ') for item in res)
+                    continue
+                except Exception as err:
+                    logging.error(f'{err}', exc_info=True)
+                    break
+            shops.update(item.split()[2] for item in res)
     except Exception as err:
         logging.error(f'{err}', exc_info=True)
         raise err
