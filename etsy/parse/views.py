@@ -69,13 +69,6 @@ def parse_link(link):
     shops = set()
     link_page = ((link + '&ref=pagination&page=') if '?' in link else
                  (link + '?ref=pagination&page='))
-    # soup = BeautifulSoup(resp.text, 'lxml')
-    # try:
-    #     location = (soup(string=re.compile('Товары из'))[0].strip('\n   ')
-    #                 .split()[2].strip(','))
-    # except Exception as err:
-    #     logging.error(f'{err}', exc_info=True)
-    #     location = ''
     try:
         while count <= 1000:
             count += 1
@@ -111,20 +104,6 @@ def parse_link(link):
                 continue
             tree = html.fromstring(item.text)
             soup = BeautifulSoup(item.text, 'lxml')
-            # try:
-            #     path = tree.xpath(
-            #         '//span[@class="shop-location wt-text-'
-            #         'caption wt-text-gray wt-line-height-'
-            #         'tight wt-text-truncate"]')
-            #     if not path:
-            #         path = tree.xpath(
-            #             '//*[@id="content"]/div[1]/div[1]/div[2]/div/div/div/'
-            #             'div[1]/div[1]/div[2]/div[2]/div[1]/div[2]/span[2]')
-            #     shop_location = path[0].text
-            #     if location not in shop_location:
-            #         continue
-            # except Exception as err:
-            #     logging.error(f'{err}', exc_info=True)
             try:
                 shop = tree.xpath(
                     '//*[@id="content"]/div[1]/div[1]/div[2]/div/div/div/'
