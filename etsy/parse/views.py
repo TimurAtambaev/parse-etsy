@@ -222,8 +222,8 @@ def parse_link(link):
         logging.error(f'{err}', exc_info=True)
         ...
 
-    if not os.path.isdir(settings.MEDIA_ROOT):
-        os.mkdir(settings.MEDIA_ROOT)
+    if not os.path.isdir('media'):
+        os.mkdir('media')
     filename = f'media/{parse_time}.csv'
     with open(filename, 'w', newline='') as file:
         writer = csv.writer(file)
@@ -233,8 +233,7 @@ def parse_link(link):
             writer.writerow(shop)
     parse = Parse.objects.create(parse_name=parse_time, link=link)
     parse.save()
-    media_files = [file_csv.strip('.csv') for file_csv in os.listdir(
-        settings.MEDIA_ROOT)]
+    media_files = [file_csv.strip('.csv') for file_csv in os.listdir('media')]
     for link in Parse.objects.all():
         if link.parse_name not in media_files:
             link.delete()
