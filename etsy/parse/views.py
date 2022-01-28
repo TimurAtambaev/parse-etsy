@@ -224,7 +224,7 @@ def parse_link(link):
 
     if not os.path.isdir(settings.MEDIA_ROOT):
         os.mkdir(settings.MEDIA_ROOT)
-    filename = f'media/{parse_time}.csv'
+    filename = f'etsy/media/{parse_time}.csv'
     with open(filename, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['Магазин', 'Ссылка на магазин', 'Год основания',
