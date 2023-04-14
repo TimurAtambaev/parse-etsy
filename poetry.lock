@@ -17,11 +17,11 @@ trio = ["trio (>=0.16)"]
 
 [[package]]
 name = "asgiref"
-version = "3.4.1"
+version = "3.5.0"
 description = "ASGI specs, helper code, and adapters"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.extras]
 tests = ["pytest", "pytest-asyncio", "mypy (>=0.800)"]
@@ -78,6 +78,14 @@ python-versions = ">=3.5.0"
 
 [package.extras]
 unicode_backport = ["unicodedata2"]
+
+[[package]]
+name = "cssselect"
+version = "1.1.0"
+description = "cssselect parses CSS3 Selectors and translates them to XPath 1.0"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "django"
@@ -251,7 +259,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "9ce916172fa6ff7f91dc0f11cbd5665be88359182793a174d434d86b04bfaff7"
+content-hash = "575296474fd0aaeed9f7f441edf733cfd16c6a2dc63f77e3f39e33a65121ee67"
 
 [metadata.files]
 anyio = [
@@ -259,8 +267,8 @@ anyio = [
     {file = "anyio-3.5.0.tar.gz", hash = "sha256:a0aeffe2fb1fdf374a8e4b471444f0f3ac4fb9f5a5b542b48824475e0042a5a6"},
 ]
 asgiref = [
-    {file = "asgiref-3.4.1-py3-none-any.whl", hash = "sha256:ffc141aa908e6f175673e7b1b3b7af4fdb0ecb738fc5c8b88f69f055c2415214"},
-    {file = "asgiref-3.4.1.tar.gz", hash = "sha256:4ef1ab46b484e3c706329cedeff284a5d40824200638503f5768edb6de7d58e9"},
+    {file = "asgiref-3.5.0-py3-none-any.whl", hash = "sha256:88d59c13d634dcffe0510be048210188edd79aeccb6a6c9028cdad6f31d730a9"},
+    {file = "asgiref-3.5.0.tar.gz", hash = "sha256:2f8abc20f7248433085eda803936d98992f1343ddb022065779f37c5da0181d0"},
 ]
 "backports.weakref" = [
     {file = "backports.weakref-1.0.post1-py2.py3-none-any.whl", hash = "sha256:81bc9b51c0abc58edc76aefbbc68c62a787918ffe943a37947e162c3f8e19e82"},
@@ -295,6 +303,10 @@ certifi = [
 charset-normalizer = [
     {file = "charset-normalizer-2.0.10.tar.gz", hash = "sha256:876d180e9d7432c5d1dfd4c5d26b72f099d503e8fcc0feb7532c9289be60fcbd"},
     {file = "charset_normalizer-2.0.10-py3-none-any.whl", hash = "sha256:cb957888737fc0bbcd78e3df769addb41fd1ff8cf950dc9e7ad7793f1bf44455"},
+]
+cssselect = [
+    {file = "cssselect-1.1.0-py2.py3-none-any.whl", hash = "sha256:f612ee47b749c877ebae5bb77035d8f4202c6ad0f0fc1271b3c18ad6c4468ecf"},
+    {file = "cssselect-1.1.0.tar.gz", hash = "sha256:f95f8dedd925fd8f54edb3d2dfb44c190d9d18512377d3c1e2388d16126879bc"},
 ]
 django = [
     {file = "Django-4.0.1-py3-none-any.whl", hash = "sha256:7cd8e8a3ed2bc0dfda05ce1e53a9c81b30eefd7aa350e538a18884475e4d4ce2"},
